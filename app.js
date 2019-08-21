@@ -17,11 +17,9 @@ require('./config/passport')(passport);
 const app = express();
 const port = 3000;
 
-mongoose.Promise = global.Promise
-
 
 //Mongodb connection
-mongoose.connect('mongodb://localhost:27017/auth', { useNewUrlParser: true })
+mongoose.connect('mongodb://localhost:27017/auth', { useCreateIndex: true, useNewUrlParser: true })
   .then(re => console.log('Connected to auth DB'))
   .catch(err => console.log(err));
 
@@ -50,5 +48,5 @@ app.use(passport.session());
 app.use('/user', users);
 
 
-
+//Server
 app.listen(port, () => console.log(`server is running on port ${port}`));
