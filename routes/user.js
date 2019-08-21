@@ -117,7 +117,13 @@ router.get('/admin', (req, res) => {
   })
 });
 
-
+//Remove user 
+router.delete('/:name/remove', is_admin, (req, res) => {
+  User.findOneAndRemove(req.params, (err, result) => {
+    if (err) throw err;
+    res.send('User removed')
+  })
+})
 
 
 
