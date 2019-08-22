@@ -117,6 +117,45 @@ router.get('/admin', (req, res) => {
   })
 });
 
+
+//Reset password
+
+router.put('/reset_password', is_admin, (req, res) => {
+  //Match User
+  User.findOne({ email: req.body.email }, (err, user) => {
+    console.log(user)
+    if (err) return res.status(400).send({ message: "User not found" })
+    if (user) {
+      //compare old_password
+      bcrypt.compare(req.body.password, user.password, (err, isMatch) => {
+        if (err) throw err;
+        console.log(isMatch);
+        if (isMatch) {
+          //Hash the new password 
+          bcrypt.genSalt(10, function (err, salt) {
+            bcrypt.hash(req.body.new_password, salt, function (err, hash) {
+              req.body.new_password = hash;
+
+              // update the new_password in the DB
+              User.updateOne({ password: req.body.new_password }, (err, user) => {
+                if (err) {
+                  console.log(err)
+                  return res.status(500).send({ message: "Internal sever error" })
+                } else {
+
+                  return res.status(200).send({ message: "Updated successfully" });
+                }
+              })
+            });
+          });
+        } else {
+          return res.send({ msg: 'Incorrect password' })
+        }
+      })
+    }
+  })
+})
+
 //Remove user 
 router.delete('/:name/remove', is_admin, (req, res) => {
   User.findOneAndRemove(req.params, (err, result) => {
