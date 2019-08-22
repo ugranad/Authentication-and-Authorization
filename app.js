@@ -20,7 +20,7 @@ const port = 3000;
 
 //Mongodb connection
 mongoose.connect('mongodb://localhost:27017/auth', { useCreateIndex: true, useNewUrlParser: true })
-  .then(re => console.log('Connected to auth DB'))
+  .then(() => console.log('Connected to auth DB'))
   .catch(err => console.log(err));
 
 
