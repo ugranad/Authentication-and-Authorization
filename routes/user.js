@@ -52,7 +52,7 @@ router.get('/test', (req, res) => {
 
 
 
-//Login POST
+//Login 
 router.post('/login',
   passport.authenticate('local'),
   function (req, res) {
@@ -73,7 +73,7 @@ router.post('/login',
 );
 
 
-//Register POST (for initial register remove is_admin below)
+//Register (for initial register remove is_admin below)
 router.post('/register', is_admin, (req, res) => {
   User.findOne({ email: req.body.email })
     .then(user => {
@@ -118,49 +118,81 @@ router.get('/admin', (req, res) => {
 });
 
 
-//Reset password
-
-router.put('/reset_password', is_admin, (req, res) => {
-  //Match User
+// Reset password
+router.put('/reset_password', (req, res, next) => {
   User.findOne({ email: req.body.email }, (err, user) => {
-    console.log(user)
-    if (err) return res.status(400).send({ message: "User not found" })
+    if (err) return res.send(err)
     if (user) {
-      //compare old_password
-      bcrypt.compare(req.body.password, user.password, (err, isMatch) => {
-        if (err) throw err;
-        console.log(isMatch);
-        if (isMatch) {
-          //Hash the new password 
-          bcrypt.genSalt(10, function (err, salt) {
-            bcrypt.hash(req.body.new_password, salt, function (err, hash) {
-              req.body.new_password = hash;
-
-              // update the new_password in the DB
-              User.updateOne({ password: req.body.new_password }, (err, user) => {
-                if (err) {
-                  console.log(err)
-                  return res.status(500).send({ message: "Internal sever error" })
-                } else {
-
-                  return res.status(200).send({ message: "Updated successfully" });
-                }
-              })
-            });
-          });
-        } else {
-          return res.send({ msg: 'Incorrect password' })
-        }
+      bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(req.body.new_password, salt, (err, hash) => {
+          if (err) return res.send(err);
+          console.log(hash)
+          console.log(user.password)
+          req.body.new_password = hash;
+          User.updateOne({ email: user.email }, { $set: { password: hash } }, (err, result) => {
+            if (err) return res.send(err);
+            return res.send({ user, result })
+          })
+        })
       })
     }
   })
 })
 
-//Remove user 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// router.put('/reset_password', (req, res) => {
+//   //Match User
+//   User.findOne({ email: req.body.email }, (err, user) => {
+//     console.log(user);
+//     if (err) return res.status(400).send({ message: "User not found" })
+//     if (user) {
+//       //compare old_password
+//       bcrypt.compare(req.body.password, user.password, (err, isMatch) => {
+//         if (err) throw err;
+//         console.log(isMatch);
+//         if (isMatch) {
+//           //Hash the new password
+//           bcrypt.genSalt(10, (err, salt) => {
+//             bcrypt.hash(req.body.new_password, salt, (err, hash) => {
+//               if (err) throw err
+//               req.body.new_password = hash;
+//               User.replaceOne({ password: req.body.password }, { password: req.body.new_password }, (err, result) => {
+//                 console.log(req.body.new_password)
+//                 if (err) throw err;
+//                 return res.send({ msg: user, result });
+//               })
+//             })
+//           })
+//         } else {
+//           return res.send({ msg: 'Incorrect password' })
+//         }
+//       })
+//     }
+//   })
+// })
+
+//Remove user
 router.delete('/:name/remove', is_admin, (req, res) => {
   User.findOneAndRemove(req.params, (err, result) => {
     if (err) throw err;
-    res.send('User removed')
+    res.send({ msg: 'User removed', result: result })
   })
 })
 
